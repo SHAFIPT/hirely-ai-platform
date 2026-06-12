@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { AuthSidePanel } from "@/components/auth/auth-side-panel";
 import { ThemeToggle } from "@/components/shared/navbar/theme-toggle";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { useAuth } from "@/contexts/auth-context";
 
 // ── Password strength helper ──────────────────────────────────
 function getStrength(password: string): number {
@@ -31,6 +32,7 @@ const STRENGTH_COLORS = [
 
 // ── Page ─────────────────────────────────────────────────────
 export default function RegisterPage() {
+  const { register: registerUser } = useAuth();
   const [form, setForm] = useState({
     name:    "",
     email:   "",
@@ -52,7 +54,7 @@ export default function RegisterPage() {
         [key]: key === "agree" ? e.target.checked : e.target.value,
       }));
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const err: Record<string, string> = {};
@@ -71,10 +73,14 @@ export default function RegisterPage() {
     if (Object.keys(err).length) return;
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await registerUser(form.name, form.email, form.pwd);
+      toast.success("Account created! Please sign in to continue");
+    } catch (error: any) {
+      toast.error(error.message || "Registration failed");
+    } finally {
       setLoading(false);
-      toast.success("Account created! Welcome to Hirely AI 🎉");
-    }, 900);
+    }
   };
 
   return (

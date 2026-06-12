@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,11 @@ import { Input } from "@/components/ui/input";
 import { AuthSidePanel } from "@/components/auth/auth-side-panel";
 import { ThemeToggle } from "@/components/shared/navbar/theme-toggle";
 import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail]     = useState("");
@@ -20,7 +24,7 @@ export default function LoginPage() {
     pwd?: string;
   }>({});
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const err: typeof errors = {};
@@ -33,10 +37,15 @@ export default function LoginPage() {
     if (Object.keys(err).length) return;
 
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await login(email, pwd);
       toast.success("Welcome back!");
-    }, 900);
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
